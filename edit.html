@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Edit website</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b1f3a'/%3E%3Ctext x='32' y='42' font-family='Georgia' font-size='28' font-weight='700' text-anchor='middle' fill='%23c9a24b'%3EDJ%3C/text%3E%3C/svg%3E">
+<!-- =====================================================================
+     Website editor. Works on the live GitHub Pages site (…/edit.html).
+     Saves your changes directly to your GitHub repository using a
+     personal access token that stays in YOUR browser only.
+     ===================================================================== -->
+<style>
+:root{--navy:#0b1f3a;--navy-d:#071528;--navy-l:#1e4378;--gold:#c9a24b;--gold-l:#d8b766;--cream:#f6eedb;--ink:#18202c;--soft:#4a5566;--line:#e4e0d6;--bg:#f4f2ec;--ok:#1f7a4d;--err:#b42318}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.55 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:var(--ink);background:var(--bg)}
+h1,h2,h3{margin:0 0 .4em;line-height:1.2}h1{font:700 1.7rem Georgia,serif;color:var(--navy)}h2{font:700 1.35rem Georgia,serif;color:var(--navy)}h3{font-size:1rem}
+a{color:var(--navy-l)}
+.top{position:sticky;top:0;z-index:20;background:var(--navy-d);color:#fff;display:flex;align-items:center;gap:.6rem;padding:.6rem 16px;flex-wrap:wrap}
+.top .t{font:700 1.1rem Georgia,serif;margin-right:auto;display:flex;align-items:center;gap:.5rem}
+.mark{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:8px;background:var(--gold);color:var(--navy-d);font:700 .8rem Georgia,serif}
+.status{font-size:.8rem;color:var(--gold-l)}
+.wrap{width:min(860px,100% - 24px);margin:1.2rem auto 6rem}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:1.1rem;margin-bottom:1rem}
+details.sec{background:#fff;border:1px solid var(--line);border-radius:14px;margin-bottom:.8rem;overflow:hidden}
+details.sec>summary{cursor:pointer;padding:1rem 1.1rem;font:700 1.15rem Georgia,serif;color:var(--navy);list-style:none;display:flex;justify-content:space-between;align-items:center}
+details.sec>summary::-webkit-details-marker{display:none}
+details.sec>summary::after{content:'▾';color:var(--gold);font-size:1rem}details.sec[open]>summary::after{content:'▴'}
+details.sec>summary .n{font:600 .75rem system-ui;color:var(--soft);margin-left:auto;margin-right:.6rem}
+.body{padding:0 1.1rem 1.1rem;display:grid;gap:.85rem}
+label{display:grid;gap:.3rem;font-size:.83rem;font-weight:600;color:var(--navy)}
+label small{font-weight:400;color:var(--soft)}
+input,textarea,select{font:inherit;color:var(--ink);padding:.6rem .7rem;border:1px solid #d5d1c6;border-radius:9px;background:#fff;width:100%}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,162,75,.2)}
+textarea{resize:vertical;min-height:70px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.3rem;padding:.55rem 1rem;border-radius:999px;border:1.5px solid var(--line);background:#fff;color:var(--navy);font:600 .85rem system-ui;cursor:pointer;text-decoration:none;white-space:nowrap}
+.btn:hover{border-color:var(--navy)}.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.gold{background:var(--gold);border-color:var(--gold);color:var(--navy-d)}.btn.gold:hover{background:var(--gold-l)}
+.btn.dark{background:transparent;border-color:rgba(255,255,255,.35);color:#fff}
+.btn.danger{color:var(--err);border-color:#f1c9c5}
+.btn.sm{padding:.3rem .65rem;font-size:.78rem}
+.item{border:1px solid var(--line);border-radius:12px;padding:.9rem;display:grid;gap:.7rem;background:#fcfbf8}
+.item-head{display:flex;align-items:center;gap:.4rem}
+.item-head strong{margin-right:auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.92rem}
+.file{display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;padding:.6rem;border:1px dashed #cfc9bb;border-radius:10px;background:#fff}
+.file .thumb{width:72px;height:72px;border-radius:8px;object-fit:cover;background:var(--cream)}
+.file .info{flex:1;min-width:160px;font-size:.82rem;color:var(--soft);overflow-wrap:anywhere}
+.file .acts{display:flex;gap:.35rem;flex-wrap:wrap}
+.pending{color:#8a5a00;font-weight:600}
+.note{font-size:.84rem;color:var(--soft)}
+.alert{padding:.75rem .9rem;border-radius:10px;font-size:.9rem}
+.alert.err{background:#fdecea;color:var(--err)}.alert.ok{background:#e6f4ec;color:var(--ok)}.alert.info{background:#e8eef8;color:var(--navy-l)}
+.steps{padding-left:1.2rem;margin:.3rem 0}.steps li{margin-bottom:.35rem}
+.bottom{position:fixed;left:0;right:0;bottom:0;z-index:20;background:#fff;border-top:1px solid var(--line);padding:.65rem 16px;display:flex;gap:.5rem;justify-content:flex-end;align-items:center;flex-wrap:wrap}
+.bottom .msg{margin-right:auto;font-size:.85rem;color:var(--soft)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:76px;z-index:30;background:var(--navy);color:#fff;padding:.7rem 1rem;border-radius:10px;font-size:.9rem;box-shadow:0 10px 30px -10px rgba(0,0,0,.4);max-width:calc(100% - 32px)}
+.toast.err{background:var(--err)}
+.hidden{display:none!important}
+.check{display:flex;gap:.5rem;align-items:center;font-weight:500}.check input{width:18px;height:18px}
+@media(max-width:600px){.row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="top">
+  <span class="t"><span class="mark">DJ</span> Website editor</span>
+  <span class="status" id="status"></span>
+  <a class="btn dark sm" id="view-site" href="./" target="_blank" rel="noopener">View site ↗</a>
+  <button class="btn dark sm hidden" id="logout">Disconnect</button>
+</div>
+
+<div class="wrap">
+  <!-- ================= CONNECT ================= -->
+  <section id="connect" class="card">
+    <h1>Connect to your website</h1>
+    <p class="note">Your changes are saved straight to your GitHub repository. You connect once per device with a GitHub <strong>access token</strong> — it stays in this browser only and is never put on the website.</p>
+    <details>
+      <summary><strong>First time? Create your token (2 minutes)</strong></summary>
+      <ol class="steps">
+        <li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub → New fine-grained token</a> (sign in if asked).</li>
+        <li><b>Token name:</b> Website editor · <b>Expiration:</b> 1 year (or your choice).</li>
+        <li><b>Repository access:</b> <em>Only select repositories</em> → choose your website repository.</li>
+        <li><b>Permissions → Repository permissions → Contents:</b> <em>Read and write</em>. Leave everything else.</li>
+        <li>Click <b>Generate token</b>, copy it (starts with <code>github_pat_</code>) and paste it below.</li>
+      </ol>
+    </details>
+    <div class="row">
+      <label>GitHub username<input id="c-owner" autocomplete="username" autocapitalize="off" spellcheck="false"></label>
+      <label>Repository name<input id="c-repo" autocapitalize="off" spellcheck="false" placeholder="username.github.io"></label>
+    </div>
+    <div class="row">
+      <label>Access token<input id="c-token" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…"></label>
+      <label>Branch<input id="c-branch" value="main" autocapitalize="off" spellcheck="false"></label>
+    </div>
+    <label class="check"><input type="checkbox" id="c-remember" checked> Remember on this device (don't tick on shared computers)</label>
+    <div><button class="btn gold" id="c-go">Connect &amp; load website</button></div>
+    <div id="c-msg"></div>
+  </section>
+
+  <!-- ================= EDITOR ================= -->
+  <section id="editor" class="hidden">
+    <div class="card">
+      <h1>Edit your website</h1>
+      <p class="note">Open a section, make changes, then press <b>Publish</b>. Use <b>Preview</b> to check first. The live site updates about 1–2 minutes after publishing.</p>
+      <div id="draft-note" class="alert info hidden">Unpublished changes from your last visit were restored. <button class="btn sm" id="discard">Discard them</button></div>
+    </div>
+    <div id="sections"></div>
+  </section>
+</div>
+
+<div class="bottom hidden" id="bar">
+  <span class="msg" id="bar-msg">No changes</span>
+  <button class="btn" id="b-download" title="Download a backup copy of the site">Backup</button>
+  <button class="btn" id="b-preview">Preview</button>
+  <button class="btn gold" id="b-publish">Publish</button>
+</div>
+<div class="toast hidden" id="toast"></div>
+
+<script>
+(function () {
+'use strict';
+// ------------------------------------------------------------------ config
+var IMG_MAX = 1600, IMG_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+var DOC_MAX_MB = 20;
+var DOC_EXT = ['pdf', 'docx', 'xlsx', 'pptx', 'jpg', 'jpeg', 'png', 'webp'];
+var START = /<!-- ═+ ▼ START: YOUR CONTENT ═+ -->[\s\S]*?<!-- ═+ ▲ END: YOUR CONTENT ═+ -->/;
+var MANAGED = /^(assets|files|gallery)\//;
+
+var PROFILE = [
+  ['name', 'Full name'], ['headline', 'Headline (e.g. Head of Human Resources)'], ['location', 'Location'],
+  ['tagline', 'Tagline (one sentence under your name)', 'area'],
+  ['intro', 'Introduction', 'area'],
+  ['photo', 'Portrait photo', 'image:assets'],
+  ['about', 'About me', 'area', 'Leave an empty line between paragraphs.'],
+  ['email', 'Public e-mail (empty = hidden)'], ['phone', 'Public phone (empty = hidden)'],
+  ['linkedin', 'LinkedIn profile link (https://…)'],
+  ['cv', 'CV file (shows a "Download CV" button)', 'doc:files']
+];
+var LISTS = [
+  { key: 'experience', label: 'Career history', add: 'position', title: 'role', fields: [
+    ['role', 'Job title'], ['company', 'Organisation'], ['dates', 'Dates (e.g. 2021 – Present)'],
+    ['summary', 'Summary', 'area'], ['points', 'Key responsibilities & results', 'lines', 'One per line — each line becomes a bullet.']] },
+  { key: 'achievements', label: 'Achievements', add: 'achievement', title: 'title', fields: [
+    ['metric', 'Big number / metric (e.g. 4 hotels, -18%)'], ['title', 'Title'], ['text', 'Description', 'area']] },
+  { key: 'projects', label: 'Projects & case studies', add: 'project', title: 'title', fields: [
+    ['title', 'Project title'], ['category', 'Category (e.g. Workforce Planning)'], ['summary', 'Summary', 'area'],
+    ['tools', 'Tools used (comma-separated)'], ['file', 'Attached document (optional)', 'doc:files']] },
+  { key: 'skills', label: 'Skills', add: 'skill', title: 'name', fields: [
+    ['group', 'Group', 'select', ['HR', 'Excel', 'Power BI', 'Power Automate', 'SharePoint', 'HRIS', 'Leadership', 'Other']],
+    ['name', 'Skill'], ['level', 'Level', 'select', ['5', '4', '3', '2', '1']]] },
+  { key: 'education', label: 'Education & certifications', add: 'entry', title: 'title', fields: [
+    ['type', 'Type', 'select', ['Degree', 'Training', 'Certification']], ['title', 'Title / qualification'],
+    ['school', 'Institution / provider'], ['year', 'Year'], ['link', 'Credential link (optional, https://…)']] },
+  { key: 'gallery', label: 'Photo gallery', add: 'photo', title: 'caption', fields: [
+    ['file', 'Photo', 'image:gallery'], ['caption', 'Caption']] },
+  { key: 'downloads', label: 'Downloads (CV, portfolio, certificates)', add: 'download', title: 'title', fields: [
+    ['title', 'Title'], ['description', 'Short description'], ['file', 'File', 'doc:files']] }
+];
+
+// ------------------------------------------------------------------ state
+var S = { cfg: null, html: '', content: null, original: '', paths: [], pending: {}, dirty: false };
+var $ = function (id) { return document.getElementById(id); };
+
+// ------------------------------------------------------------------ utils
+function el(tag, attrs, kids) {
+  var e = document.createElement(tag);
+  Object.keys(attrs || {}).forEach(function (k) {
+    if (attrs[k] === null || attrs[k] === undefined) return;
+    if (k === 'class') e.className = attrs[k];
+    else if (k === 'text') e.textContent = attrs[k];
+    else if (k.slice(0, 2) === 'on') e.addEventListener(k.slice(2), attrs[k]);
+    else e.setAttribute(k, attrs[k]);
+  });
+  (kids || []).forEach(function (c) { if (c) e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c); });
+  return e;
+}
+function toast(msg, err) {
+  var t = $('toast'); t.textContent = msg; t.className = 'toast' + (err ? ' err' : '');
+  clearTimeout(toast.t); toast.t = setTimeout(function () { t.className = 'toast hidden'; }, err ? 7000 : 3500);
+}
+function slug(s) { return String(s || 'file').toLowerCase().replace(/\.[^.]+$/, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'file'; }
+function ext(name) { var m = /\.([a-z0-9]+)$/i.exec(name || ''); return m ? m[1].toLowerCase() : ''; }
+function clone(o) { return JSON.parse(JSON.stringify(o)); }
+function siteBase() {
+  if (/github\.io$/.test(location.hostname)) return location.href.replace(/[^/]*([?#].*)?$/, '');
+  var o = S.cfg; if (!o) return '';
+  return o.repo.toLowerCase() === (o.owner + '.github.io').toLowerCase() ? 'https://' + o.owner + '.github.io/' : 'https://' + o.owner + '.github.io/' + o.repo + '/';
+}
+function fileUrl(path) {
+  if (!path) return '';
+  if (S.pending[path]) return S.pending[path].url;
+  return siteBase() + path.split('/').map(encodeURIComponent).join('/');
+}
+function blobToBase64(blob) {
+  return new Promise(function (res, rej) {
+    var r = new FileReader(); r.onload = function () { res(String(r.result).split(',')[1]); }; r.onerror = rej; r.readAsDataURL(blob);
+  });
+}
+function resizeImage(file) {
+  if (file.type === 'image/gif' || !window.createImageBitmap) return Promise.resolve(file);
+  return createImageBitmap(file).then(function (bmp) {
+    var scale = Math.min(1, IMG_MAX / Math.max(bmp.width, bmp.height));
+    if (scale === 1 && file.size < 900 * 1024) return file;
+    var c = document.createElement('canvas'); c.width = Math.round(bmp.width * scale); c.height = Math.round(bmp.height * scale);
+    var g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(bmp, 0, 0, c.width, c.height);
+    return new Promise(function (res) { c.toBlob(function (b) { res(b && b.size < file.size ? new File([b], slug(file.name) + '.jpg', { type: 'image/jpeg' }) : file); }, 'image/jpeg', 0.85); });
+  }).catch(function () { return file; });
+}
+
+// ------------------------------------------------------------------ GitHub API
+function gh(method, path, body, accept) {
+  var c = S.cfg;
+  return fetch('https://api.github.com/repos/' + encodeURIComponent(c.owner) + '/' + encodeURIComponent(c.repo) + path, {
+    method: method,
+    headers: { Authorization: 'Bearer ' + c.token, Accept: accept || 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', 'Content-Type': 'application/json' },
+    body: body ? JSON.stringify(body) : undefined, cache: 'no-store'
+  }).then(function (r) {
+    if (r.ok) return accept && accept.indexOf('raw') >= 0 ? r.text() : r.json();
+    return r.json().catch(function () { return {}; }).then(function (j) {
+      var m = j.message || ('HTTP ' + r.status);
+      if (r.status === 401) m = 'The token is invalid or expired. Create a new one and reconnect.';
+      if (r.status === 403) m = 'The token is not allowed to change this repository. Check it has "Contents: Read and write" for this repository. (' + m + ')';
+      if (r.status === 404) m = 'Repository or branch not found — check the username, repository name and branch, and that the token can access this repository.';
+      throw new Error(m);
+    });
+  });
+}
+
+// ------------------------------------------------------------------ parse / build
+function parseContent(html) {
+  var block = START.exec(html);
+  if (!block) throw new Error('Could not find the ▼ START / ▲ END content markers in index.html.');
+  var script = /<script>([\s\S]*?)<\/script>/.exec(block[0]);
+  if (!script) throw new Error('The content block in index.html has no <script> section.');
+  var win = {};
+  try { new Function('window', script[1])(win); }
+  catch (e) { throw new Error('index.html content has a typing error (' + e.message + '). Fix it on GitHub (History → previous version), then reload.'); }
+  var c = win.CONTENT || {};
+  LISTS.forEach(function (l) { if (!Array.isArray(c[l.key])) c[l.key] = []; });
+  PROFILE.forEach(function (f) { if (c[f[0]] === undefined) c[f[0]] = ''; });
+  c.skills.forEach(function (s) { s.level = String(s.level || 4); });
+  return c;
+}
+function buildHtml(content) {
+  var out = clone(content);
+  out.skills.forEach(function (s) { s.level = Number(s.level) || 4; });
+  var json = JSON.stringify(out, null, 2).replace(/</g, '\\u003c');
+  var block = '<!-- ════════════════ ▼ START: YOUR CONTENT ════════════════ -->\n<scr' + 'ipt>\n' +
+    '/* Saved with edit.html on ' + new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC.\n' +
+    '   Easiest: edit with …/edit.html. You can also edit by hand here — keep the quotes and commas. */\n' +
+    'window.CONTENT = ' + json + ';\n<\/script>\n' +
+    '<!-- ════════════════ ▲ END: YOUR CONTENT ═════════════════ -->';
+  return S.html.replace(START, function () { return block; });
+}
+function referenced(content) {
+  var set = {};
+  (function walk(v) {
+    if (typeof v === 'string') { if (MANAGED.test(v)) set[v] = true; }
+    else if (v && typeof v === 'object') Object.keys(v).forEach(function (k) { walk(v[k]); });
+  })(content);
+  return set;
+}
+
+// ------------------------------------------------------------------ connect
+function savedCfg() {
+  try { return JSON.parse(localStorage.getItem('editor.cfg') || sessionStorage.getItem('editor.cfg') || 'null'); } catch (e) { return null; }
+}
+function guessRepo() {
+  var h = location.hostname, m = /^([^.]+)\.github\.io$/.exec(h);
+  if (!m) return {};
+  var seg = location.pathname.split('/').filter(Boolean)[0];
+  return { owner: m[1], repo: seg && !/\.html$/.test(seg) ? seg : m[1] + '.github.io' };
+}
+function initConnect() {
+  var c = savedCfg() || {}, g = guessRepo();
+  $('c-owner').value = c.owner || g.owner || '';
+  $('c-repo').value = c.repo || g.repo || '';
+  $('c-branch').value = c.branch || 'main';
+  $('c-token').value = c.token || '';
+  if (c.token && c.owner && c.repo) connect();
+}
+function connect() {
+  var cfg = { owner: $('c-owner').value.trim(), repo: $('c-repo').value.trim().replace(/^.*github\.com\//, '').replace(/\.git$/, '').split('/').pop(),
+    branch: $('c-branch').value.trim() || 'main', token: $('c-token').value.trim() };
+  var msg = $('c-msg'); msg.innerHTML = '';
+  if (!cfg.owner || !cfg.repo || !cfg.token) { msg.appendChild(el('p', { class: 'alert err', text: 'Fill in username, repository and token.' })); return; }
+  S.cfg = cfg;
+  $('c-go').disabled = true; $('c-go').textContent = 'Connecting…';
+  gh('GET', '').then(function (repo) {
+    if (repo.permissions && !repo.permissions.push) throw new Error('This token can read but not write the repository. Give it "Contents: Read and write".');
+    return Promise.all([
+      gh('GET', '/contents/index.html?ref=' + encodeURIComponent(cfg.branch), null, 'application/vnd.github.raw+json'),
+      gh('GET', '/git/trees/' + encodeURIComponent(cfg.branch) + '?recursive=1')
+    ]);
+  }).then(function (r) {
+    S.html = r[0];
+    S.content = parseContent(S.html);
+    S.original = JSON.stringify(S.content);
+    S.paths = (r[1].tree || []).filter(function (t) { return t.type === 'blob'; }).map(function (t) { return t.path; });
+    var store = $('c-remember').checked ? localStorage : sessionStorage;
+    try { localStorage.removeItem('editor.cfg'); sessionStorage.removeItem('editor.cfg'); store.setItem('editor.cfg', JSON.stringify(cfg)); } catch (e) {}
+    restoreDraft();
+    $('connect').classList.add('hidden'); $('editor').classList.remove('hidden'); $('bar').classList.remove('hidden'); $('logout').classList.remove('hidden');
+    $('status').textContent = cfg.owner + '/' + cfg.repo;
+    $('view-site').href = siteBase() || './';
+    render(); updateBar();
+  }).catch(function (e) {
+    msg.appendChild(el('p', { class: 'alert err', text: e.message }));
+    S.cfg = null;
+  }).then(function () { $('c-go').disabled = false; $('c-go').textContent = 'Connect & load website'; });
+}
+
+// ------------------------------------------------------------------ drafts (unpublished text survives a reload)
+function draftKey() { return 'editor.draft.' + S.cfg.owner + '/' + S.cfg.repo; }
+function saveDraft() { try { localStorage.setItem(draftKey(), JSON.stringify({ base: S.original, content: S.content })); } catch (e) {} }
+function clearDraft() { try { localStorage.removeItem(draftKey()); } catch (e) {} }
+function restoreDraft() {
+  try {
+    var d = JSON.parse(localStorage.getItem(draftKey()) || 'null');
+    if (d && d.base === S.original && JSON.stringify(d.content) !== S.original) {
+      // drop references to uploads that were never published (their files are gone)
+      var c = d.content, refs = referenced(c);
+      Object.keys(refs).forEach(function (p) { if (S.paths.indexOf(p) < 0) dropRef(c, p); });
+      S.content = c; $('draft-note').classList.remove('hidden');
+    } else clearDraft();
+  } catch (e) {}
+}
+function dropRef(obj, path) {
+  Object.keys(obj).forEach(function (k) {
+    if (obj[k] === path) obj[k] = '';
+    else if (obj[k] && typeof obj[k] === 'object') dropRef(obj[k], path);
+  });
+}
+
+// ------------------------------------------------------------------ form rendering
+var openSections = { profile: true };
+function changed() { S.dirty = JSON.stringify(S.content) !== S.original || Object.keys(S.pending).length > 0; saveDraft(); updateBar(); }
+function updateBar() {
+  var n = Object.keys(S.pending).length;
+  $('bar-msg').textContent = S.dirty ? 'Unpublished changes' + (n ? ' · ' + n + ' new file(s)' : '') : 'All changes published';
+  $('b-publish').disabled = !S.dirty;
+}
+
+function field(obj, def, onTitle) {
+  var key = def[0], label = def[1], type = def[2] || 'text', extra = def[3];
+  if (type.indexOf('image:') === 0 || type.indexOf('doc:') === 0) return fileField(obj, key, label, type.split(':')[0], type.split(':')[1]);
+  var input;
+  if (type === 'area') input = el('textarea', { rows: key === 'about' ? 8 : 3 });
+  else if (type === 'lines') input = el('textarea', { rows: 6 });
+  else if (type === 'select') {
+    input = el('select', {}, extra.map(function (o) { return el('option', { value: o, text: key === 'level' ? o + ' / 5' : o }); }));
+    if (extra.indexOf(String(obj[key])) < 0 && obj[key]) input.appendChild(el('option', { value: obj[key], text: obj[key] }));
+  } else input = el('input', { type: /email/.test(key) ? 'email' : /linkedin|link/.test(key) ? 'url' : 'text' });
+  input.value = type === 'lines' ? (obj[key] || []).join('\n') : (obj[key] == null ? '' : String(obj[key]));
+  input.addEventListener('input', function () {
+    obj[key] = type === 'lines' ? input.value.split('\n').map(function (s) { return s.trim(); }).filter(Boolean) : input.value;
+    if (onTitle) onTitle();
+    changed();
+  });
+  var help = type !== 'select' && extra ? el('small', { text: extra }) : null;
+  return el('label', {}, [label, input, help]);
+}
+
+function fileField(obj, key, label, kind, folder) {
+  var box = el('div', { class: 'file' });
+  var picker = el('input', { type: 'file', class: 'hidden', accept: kind === 'image' ? 'image/jpeg,image/png,image/webp,image/gif' : DOC_EXT.map(function (e) { return '.' + e; }).join(',') });
+  function draw() {
+    box.innerHTML = '';
+    var v = obj[key];
+    if (kind === 'image') box.appendChild(v ? el('img', { class: 'thumb', src: fileUrl(v), alt: '' }) : el('div', { class: 'thumb' }));
+    box.appendChild(el('div', { class: 'info' }, [
+      el('div', { text: label, style: 'font-weight:600;color:var(--navy)' }),
+      v ? el('div', {}, [v, S.pending[v] ? el('span', { class: 'pending', text: ' · new — published when you press Publish' }) : null]) : el('div', { text: 'No file' })
+    ]));
+    var existing = S.paths.filter(function (p) { return p.indexOf(folder + '/') === 0 && p !== v && !/\.gitkeep$/.test(p) && (kind !== 'image' || /\.(jpe?g|png|webp|gif)$/i.test(p)); });
+    var acts = el('div', { class: 'acts' }, [
+      el('button', { type: 'button', class: 'btn sm gold', text: v ? 'Replace' : 'Upload', onclick: function () { picker.click(); } }),
+      v ? el('button', { type: 'button', class: 'btn sm danger', text: 'Remove', onclick: function () { obj[key] = ''; draw(); changed(); } }) : null
+    ]);
+    if (existing.length) {
+      var sel = el('select', { class: 'btn sm', style: 'width:auto', onchange: function () { if (sel.value) { obj[key] = sel.value; draw(); changed(); } } },
+        [el('option', { value: '', text: 'Use existing file…' })].concat(existing.map(function (p) { return el('option', { value: p, text: p.replace(folder + '/', '') }); })));
+      acts.appendChild(sel);
+    }
+    box.appendChild(acts); box.appendChild(picker);
+  }
+  picker.addEventListener('change', function () {
+    var f = picker.files && picker.files[0]; picker.value = '';
+    if (!f) return;
+    var e = ext(f.name);
+    if (kind === 'image' && IMG_TYPES.indexOf(f.type) < 0) return toast('Please choose a JPG, PNG, WEBP or GIF photo.', true);
+    if (kind === 'doc' && DOC_EXT.indexOf(e) < 0) return toast('Allowed: PDF, Word, Excel, PowerPoint, JPG, PNG, WEBP.', true);
+    if (f.size > DOC_MAX_MB * 1024 * 1024) return toast('File is larger than ' + DOC_MAX_MB + ' MB. Please compress it.', true);
+    (kind === 'image' ? resizeImage(f) : Promise.resolve(f)).then(function (file) {
+      var old = obj[key];
+      if (old && S.pending[old] && !referencedElsewhere(old, obj, key)) { URL.revokeObjectURL(S.pending[old].url); delete S.pending[old]; }
+      var path = folder + '/' + slug(f.name) + '-' + Date.now().toString(36) + '.' + (ext(file.name) || e);
+      S.pending[path] = { file: file, url: URL.createObjectURL(file) };
+      obj[key] = path; draw(); changed();
+    });
+  });
+  draw();
+  return box;
+}
+function referencedElsewhere(path, obj, key) {
+  var save = obj[key]; obj[key] = ''; var r = !!referenced(S.content)[path]; obj[key] = save; return r;
+}
+
+function section(id, title, count, bodyKids) {
+  var d = el('details', { class: 'sec' }, [el('summary', {}, [title, count != null ? el('span', { class: 'n', text: count + ' item(s)' }) : null]), el('div', { class: 'body' }, bodyKids)]);
+  if (openSections[id]) d.open = true;
+  d.addEventListener('toggle', function () { openSections[id] = d.open; });
+  return d;
+}
+
+function render() {
+  var root = $('sections'); root.innerHTML = '';
+  var C = S.content;
+  root.appendChild(section('profile', 'Profile, introduction & contact', null, PROFILE.map(function (f) { return field(C, f); })));
+  LISTS.forEach(function (L) {
+    var items = C[L.key];
+    var kids = items.map(function (it, i) {
+      var head = el('strong', { text: it[L.title] || '(untitled)' });
+      var setTitle = function () { head.textContent = it[L.title] || '(untitled)'; };
+      return el('div', { class: 'item' }, [
+        el('div', { class: 'item-head' }, [head,
+          el('button', { type: 'button', class: 'btn sm', text: '▲', title: 'Move up', disabled: i === 0 ? 'disabled' : null, onclick: function () { move(items, i, -1); } }),
+          el('button', { type: 'button', class: 'btn sm', text: '▼', title: 'Move down', disabled: i === items.length - 1 ? 'disabled' : null, onclick: function () { move(items, i, 1); } }),
+          el('button', { type: 'button', class: 'btn sm danger', text: 'Delete', onclick: function () {
+            if (!confirm('Delete "' + (it[L.title] || 'this item') + '"?')) return;
+            items.splice(i, 1); render(); changed();
+          } })
+        ])
+      ].concat(L.fields.map(function (f) { return field(it, f, f[0] === L.title ? setTitle : null); })));
+    });
+    kids.push(el('div', {}, [el('button', { type: 'button', class: 'btn gold sm', text: '+ Add ' + L.add, onclick: function () {
+      var blank = {}; L.fields.forEach(function (f) { blank[f[0]] = f[2] === 'lines' ? [] : f[2] === 'select' ? f[3][0] === '5' ? '4' : f[3][0] : ''; });
+      items.push(blank); openSections[L.key] = true; render(); changed();
+      var all = document.querySelectorAll('details[open] .item'); if (all.length) all[all.length - 1].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } })]));
+    if (!items.length) kids.unshift(el('p', { class: 'note', text: 'Nothing here yet — this section is hidden on the website until you add something.' }));
+    root.appendChild(section(L.key, L.label, items.length, kids));
+  });
+}
+function move(arr, i, d) { var j = i + d; if (j < 0 || j >= arr.length) return; var t = arr[i]; arr[i] = arr[j]; arr[j] = t; render(); changed(); }
+
+// ------------------------------------------------------------------ preview / backup / publish
+function validate() {
+  if (!String(S.content.name || '').trim()) { toast('Your name cannot be empty.', true); return false; }
+  var bad = [S.content.linkedin].concat(S.content.education.map(function (e) { return e.link; })).filter(function (u) { return u && !/^https?:\/\//i.test(u); });
+  if (bad.length) { toast('Links must start with https:// — check: ' + bad[0], true); return false; }
+  return true;
+}
+function preview() {
+  if (!validate()) return;
+  var html = buildHtml(S.content);
+  // show new (unpublished) files in the preview and load other files from the live site
+  Object.keys(S.pending).forEach(function (p) { html = html.split('"' + p + '"').join('"' + S.pending[p].url + '"'); });
+  html = html.replace('<head>', '<head><base href="' + siteBase() + '">');
+  var w = window.open(URL.createObjectURL(new Blob([html], { type: 'text/html' })), '_blank');
+  if (!w) toast('Allow pop-ups for this page to see the preview.', true);
+}
+function backup() {
+  var a = el('a', { href: URL.createObjectURL(new Blob([buildHtml(S.content)], { type: 'text/html' })), download: 'index-backup-' + new Date().toISOString().slice(0, 10) + '.html' });
+  document.body.appendChild(a); a.click(); a.remove();
+}
+
+function publish() {
+  if (!validate()) return;
+  var btn = $('b-publish'); btn.disabled = true; btn.textContent = 'Publishing…';
+  var html = buildHtml(S.content);
+  var nowRefs = referenced(S.content), oldRefs = referenced(JSON.parse(S.original));
+  var uploads = Object.keys(S.pending).filter(function (p) { return nowRefs[p]; });
+  var deletes = Object.keys(oldRefs).filter(function (p) { return !nowRefs[p] && S.paths.indexOf(p) >= 0; });
+  var branch = encodeURIComponent(S.cfg.branch), head;
+  gh('GET', '/git/ref/heads/' + branch).then(function (ref) {
+    head = ref.object.sha;
+    return gh('GET', '/git/commits/' + head);
+  }).then(function (commit) {
+    var i = 0;
+    $('bar-msg').textContent = uploads.length ? 'Uploading files…' : 'Saving…';
+    return Promise.all(uploads.map(function (p) {
+      return blobToBase64(S.pending[p].file).then(function (b64) {
+        return gh('POST', '/git/blobs', { content: b64, encoding: 'base64' });
+      }).then(function (blob) { $('bar-msg').textContent = 'Uploaded ' + (++i) + ' of ' + uploads.length; return { path: p, mode: '100644', type: 'blob', sha: blob.sha }; });
+    })).then(function (entries) {
+      return gh('POST', '/git/blobs', { content: html, encoding: 'utf-8' }).then(function (b) {
+        entries.push({ path: 'index.html', mode: '100644', type: 'blob', sha: b.sha });
+        deletes.forEach(function (p) { entries.push({ path: p, mode: '100644', type: 'blob', sha: null }); });
+        return gh('POST', '/git/trees', { base_tree: commit.tree.sha, tree: entries });
+      });
+    });
+  }).then(function (tree) {
+    var parts = ['Update website content'];
+    if (uploads.length) parts.push(uploads.length + ' file(s) added');
+    if (deletes.length) parts.push(deletes.length + ' file(s) removed');
+    return gh('POST', '/git/commits', { message: parts.join(' · ') + ' (via edit.html)', tree: tree.sha, parents: [head] });
+  }).then(function (commit) {
+    return gh('PATCH', '/git/refs/heads/' + branch, { sha: commit.sha });
+  }).then(function () {
+    S.html = html; S.original = JSON.stringify(S.content);
+    S.paths = S.paths.filter(function (p) { return deletes.indexOf(p) < 0; }).concat(uploads);
+    Object.keys(S.pending).forEach(function (p) { URL.revokeObjectURL(S.pending[p].url); });
+    S.pending = {}; S.dirty = false; clearDraft(); $('draft-note').classList.add('hidden');
+    render(); updateBar();
+    toast('Published! The live site updates in about 1–2 minutes.');
+  }).catch(function (e) {
+    toast('Not published: ' + e.message, true); updateBar();
+  }).then(function () { btn.textContent = 'Publish'; updateBar(); });
+}
+
+// ------------------------------------------------------------------ wire up
+$('c-go').addEventListener('click', connect);
+$('c-token').addEventListener('keydown', function (e) { if (e.key === 'Enter') connect(); });
+$('b-preview').addEventListener('click', preview);
+$('b-publish').addEventListener('click', publish);
+$('b-download').addEventListener('click', backup);
+$('discard').addEventListener('click', function () {
+  if (!confirm('Discard all unpublished changes?')) return;
+  S.content = JSON.parse(S.original); S.pending = {}; clearDraft(); $('draft-note').classList.add('hidden'); render(); changed();
+});
+$('logout').addEventListener('click', function () {
+  if (S.dirty && !confirm('You have unpublished changes. Disconnect anyway?')) return;
+  try { localStorage.removeItem('editor.cfg'); sessionStorage.removeItem('editor.cfg'); } catch (e) {}
+  location.reload();
+});
+window.addEventListener('beforeunload', function (e) { if (Object.keys(S.pending).length) { e.preventDefault(); e.returnValue = ''; } });
+if (location.protocol === 'content:' || location.protocol === 'file:') {
+  $('c-msg').appendChild(el('p', { class: 'alert info', text: 'Tip: the editor works best from your live site address (…github.io/…/edit.html).' }));
+}
+initConnect();
+})();
+</script>
+</body>
+</html>
